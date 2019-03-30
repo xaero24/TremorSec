@@ -1,17 +1,18 @@
 from KeyLogger import KeyLog
 import csv
 import re
-import os
 
 Log = KeyLog()
 Log.activateLogging()
 
 
 def convertToCSV(path):
+    """
+    converts the key log txt to csv data base for later use
+    :param name of the key log file:
+    :return:
+    """
     with open(path, 'r') as in_file:
-        # stripped = (line.strip() for line in in_file)
-        # lines = (line.split(",") for line in stripped if line)
-        # out_file = open(path + ".csv", 'w', newline="")
         with open(path + ".csv", 'w', newline="") as out_file:
             writer = csv.writer(out_file, delimiter=',', quotechar='"')
             writer.writerow(('date', 'time[h]', 'time[m]', 'time[s]', 'pressed'))
@@ -27,10 +28,15 @@ def convertToCSV(path):
 
 
 def reset():
+    """
+    Resets the files to empty ones for new data
+    :return:
+    """
     txt = open(Log.getFile(), 'w')
     csv = open(Log.getFile() + ".csv", 'w')
     txt.close()
     csv.close()
+
 
 convertToCSV(Log.getFile())
 
