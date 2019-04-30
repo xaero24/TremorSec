@@ -1,11 +1,20 @@
 import tkinter as tk
-import webbrowser
-import os, csv
+import os
+import csv
+import subprocess as sp
 from BasicKeyLogger import KeyLogger
+from Plots import PlotCreate
+import Converter as converter
 from tkinter import messagebox
 LARGE_FONT = ("Verdana", 12)
 HEIGHT = 580
 WIDTH = 500
+dirName = "Results"
+# define test modes
+test1 = 1
+test1Phase2Var = 11
+test2 = 2
+normalMode = 3
 
 
 class TremorSecApp(tk.Tk):
@@ -19,7 +28,7 @@ class TremorSecApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (AgreementPage, UserLogin, OptionsWindow, Stats, StartStop, Test1, Test2):
+        for F in (AgreementPage, UserLogin, OptionsWindow, Stats, StartStop, Test1, Test2, Test1Phase2):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -90,7 +99,9 @@ class UserLogin(tk.Frame):
         self.label_password = tk.Label(frame, text="Password")
 
         self.entry_username = tk.Entry(frame)
+        self.entry_username.insert(0, "tzvi")  # TODO: REMOVE
         self.entry_password = tk.Entry(frame, show="*")
+        self.entry_password.insert(0, "1234")  # TODO: REMOVE
 
         self.label_username.grid(row=1)
         self.label_password.grid(row=2)
@@ -139,7 +150,6 @@ class OptionsWindow(tk.Frame):
 
         self.StatsButton = tk.Button(frame, text="View Stats", command=lambda: controller.show_frame(Stats))
         self.StatsButton.pack(padx=10, pady=10)
-        # TODO: Add graphs and stats later after we get data
 
         self.DisableExit = tk.Button(frame, text="Disable and Exit", command=lambda: disableAndExit())
         self.DisableExit.pack(padx=10, pady=10)
@@ -147,7 +157,6 @@ class OptionsWindow(tk.Frame):
         frame.place(relx=0.28, rely=0.1)
 
         def disableAndExit():
-            # TODO: Disable key logger
             print("Exit")
             exit()
 
@@ -157,6 +166,9 @@ class Stats(tk.Frame):
         tk.Frame.__init__(self, parent)
         test = tk.Label(self, text="Stat Window")
         test.pack()
+        plot = PlotCreate()
+        tButton = tk.Button(self, text="Show Graph", command=lambda: PlotCreate.createPlot(plot))
+        tButton.pack(pady=30)
         backButton = tk.Button(self, text="Back", command=lambda: controller.show_frame(OptionsWindow))
         backButton.pack(side=tk.BOTTOM)
 
@@ -166,17 +178,47 @@ class StartStop(tk.Frame):
         tk.Frame.__init__(self, parent)
         test = tk.Label(self, text="Key Logger")
         test.pack()
+
+        # Create target Directory if don't exist
+        if not os.path.exists(dirName):
+            os.mkdir(dirName)
+            print("Directory ", dirName, " Created ")
+        else:
+            print("Directory ", dirName, " already exists")
+
+        if not os.path.exists(dirName + "/ResultsCsv"):
+            os.mkdir(dirName + "/ResultsCsv")
+            print("Directory ", dirName + "/ResultsCsv", " Created ")
+        else:
+            print("Directory ", dirName + "/ResultsCsv", " already exists")
+
+        # exists = os.path.isfile(dirName + "AvgSpeeds.txt")
+        # if not exists:
+        #     open(dirName + "/AvgSpeeds.txt", 'a').close()
+
+        self.canvas = tk.Canvas(self, width=31, height=31)
+        self.indicator = self.canvas.create_oval(1, 1, 30, 30, outline="#000000", fill="#dd0d0d", width=2)
+
         backButton = tk.Button(self, text="Back", command=lambda: controller.show_frame(OptionsWindow))
 
-        KeyLoggerButton = tk.Button(self, text="Start", command=lambda: KL.activateKeyLogger())
+        KeyLoggerButton = tk.Button(self, text="Start", command=lambda: self.startKeyLoggerNormal())
         KeyLoggerButton.pack(padx=10, pady=10)
 
         instructions = tk.Label(self,
                                 text="As you press start the Key Logger will start working. \nThe app will be suspended. \nTo stop recording press ESC")
         instructions.pack()
 
+        self.canvas.pack()
+
         KeyLoggerButton.pack(side=tk.TOP)
         backButton.pack(side=tk.BOTTOM)
+
+    def startKeyLoggerNormal(self):
+        self.canvas.itemconfig(self.indicator, fill="#38ce0a")
+        self.update()
+        KL.activateKeyLogger(normalMode)
+        self.canvas.itemconfig(self.indicator, fill="#ef0404")
+        self.update()
 
 
 class Test1(tk.Frame):
@@ -185,26 +227,108 @@ class Test1(tk.Frame):
         test = tk.Label(self, text="Test1")
         test.pack()
 
+        self.canvas = tk.Canvas(self, width=31, height=31)
+        self.indicator = self.canvas.create_oval(1, 1, 30, 30, outline="#000000", fill="#dd0d0d", width=2)
+
         instructions = tk.Label(self,
                                 text="This is the First test to check for baseline."
-                                     + "\nPlease press buttons: a & p  \nrapidly as fast as you can for 15 sec \n"
+                                     + "\nPlease press buttons: a & p  \n"
+                                     + "Press the keys with one hand of your'e choosing \n"
+                                     + "rapidly as fast as you can for 15 sec \n"
+                                     + "The test will begin when you press START"
+                                     + "\n\nNOTE: the app will suspend during the time of the test")
+
+        instructions.pack()
+        openButton = tk.Button(self, text="Open input NotePad", command=lambda: openFiles())
+        openButton.pack(padx=10, pady=10)
+
+        # KeyLoggerButton = tk.Button(self, text="Start", command=lambda: KL.activateKeyLogger(test1))
+        KeyLoggerButton = tk.Button(self, text="Start", command=lambda: self.activation())
+        KeyLoggerButton.pack()
+
+        self.canvas.pack()
+
+        backButton = tk.Button(self, text="Continue to second phase", command=lambda: openFiles(1))
+        backButton.pack(padx=10, pady=15)
+
+        def openFiles(back=None):
+            if back is None:
+                self.s = sp.Popen(['notepad', "input.txt"])
+            if back is 1:
+                try:
+                    self.s.terminate()
+                except Exception:
+                    pass
+                finally:
+                    controller.show_frame(Test1Phase2)
+
+    def activation(self):
+        self.canvas.itemconfig(self.indicator, fill="#38ce0a")
+        self.update()
+        KL.activateKeyLogger(test1)
+        self.canvas.itemconfig(self.indicator, fill="#ef0404")
+        self.update()
+
+
+class Test1Phase2(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        test = tk.Label(self, text="Test1 Phase2")
+        test.pack()
+
+        self.canvas = tk.Canvas(self, width=31, height=31)
+        self.indicator = self.canvas.create_oval(1, 1, 30, 30, outline="#000000", fill="#dd0d0d", width=2)
+
+        instructions = tk.Label(self,
+                                text="This is the First test to check for baseline."
+                                     + "\nPlease press buttons: a & p  \n"
+                                     + "Press the keys with both hands \n"
+                                     + "rapidly as fast as you can for 15 sec \n"
                                      + "The test will begin when you press START"
                                      + "\n\nNOTE: the app will suspend during the time of the test")
 
         instructions.pack()
 
-        KeyLoggerButton = tk.Button(self, text="Start", command=lambda: KL.activateKeyLogger(1))
+        openButton = tk.Button(self, text="Open input NotePad", command=lambda: openFiles())
+        openButton.pack(padx=10, pady=10)
+
+        KeyLoggerButton = tk.Button(self, text="Start", command=lambda: self.activation())
         KeyLoggerButton.pack(padx=10, pady=10)
 
-        backButton = tk.Button(self, text="Back", command=lambda: controller.show_frame(OptionsWindow))
+        self.canvas.pack()
+
+        backButton = tk.Button(self, text="Back", command=lambda: openFiles(1))
         backButton.pack(side=tk.BOTTOM)
+
+        def openFiles(back=None):
+            if back is None:
+                self.s = sp.Popen(['notepad', "input.txt"])
+            if back is 1:
+                try:
+                    self.s.terminate()
+                except Exception:
+                    pass
+                finally:
+                    controller.show_frame(OptionsWindow)
+
+    def activation(self):
+        self.canvas.itemconfig(self.indicator, fill="#38ce0a")
+        self.update()
+        KL.activateKeyLogger(test1Phase2Var)
+        self.canvas.itemconfig(self.indicator, fill="#ef0404")
+        self.update()
 
 
 class Test2(tk.Frame):
     def __init__(self, parent, controller):
+        self.f = None
+        self.s = None
         tk.Frame.__init__(self, parent)
         test = tk.Label(self, text="Test2")
         test.pack()
+
+        self.canvas = tk.Canvas(self, width=31, height=31)
+        self.indicator = self.canvas.create_oval(1, 1, 30, 30, outline="#000000", fill="#dd0d0d", width=2)
 
         instructions = tk.Label(self,
                                 text="This is the Second test \n"
@@ -217,80 +341,35 @@ class Test2(tk.Frame):
         openButton = tk.Button(self, text="Open files", command=lambda: openFiles())
         openButton.pack(padx=10, pady=10)
 
-        def openFiles():
-            webbrowser.open("writetest.txt")
-            webbrowser.open("textsource.txt")
-
-        KeyLoggerButton = tk.Button(self, text="Start", command=lambda: KL.activateKeyLogger(2))
+        KeyLoggerButton = tk.Button(self, text="Start", command=lambda: self.activationTest2())
         KeyLoggerButton.pack(padx=10, pady=10)
 
-        backButton = tk.Button(self, text="Back", command=lambda: controller.show_frame(OptionsWindow))
+        self.canvas.pack()
+
+        backButton = tk.Button(self, text="Back", command=lambda: openFiles(1))
         backButton.pack(side=tk.BOTTOM)
+
+        def openFiles(back=None):
+            if back is None:
+                self.s = sp.Popen(['notepad', "textsource.txt"])
+                self.f = sp.Popen(['notepad', "writetest.txt"])
+            if back is 1:
+                try:
+                    self.f.terminate()
+                    self.s.terminate()
+                except Exception:
+                    pass
+                finally:
+                    controller.show_frame(OptionsWindow)
+
+    def activationTest2(self):
+        self.canvas.itemconfig(self.indicator, fill="#38ce0a")
+        self.update()
+        KL.activateKeyLogger(test2)
+        self.canvas.itemconfig(self.indicator, fill="#ef0404")
+        self.update()
 
 
 KL = KeyLogger()
 app = TremorSecApp()
 app.mainloop()
-
-# #####Previous Version - Meantime Stayes as Comments#########
-# HEIGHT = 580
-# WIDTH = 500
-#
-# root = tk.Tk()
-# root.resizable(False, False)
-# root.title('Tremor Sec')
-#
-# # Centering the Window on screen
-# screen_width = root.winfo_screenwidth()
-# screen_height = root.winfo_screenheight()asdasdas
-#
-# x_cordinate = int((screen_width/2) - (HEIGHT/2))
-# y_cordinate = int((screen_height/2) - (HEIGHT/2))
-#
-# root.geometry("{}x{}+{}+{}".format(HEIGHT, HEIGHT, x_cordinate, y_cordinate))
-#
-# # Creates the Window Size
-# canvas = tk.Canvas(root, height=HEIGHT, width=WIDTH)
-# canvas.pack()
-#
-# # Inside frame with background color
-# frame = tk.Frame(root)
-# frame.place(relx=0.1, rely=0.05, relwidth=0.8, relheight=0.78)
-#
-# # ScrollBar for the agreement text box
-# scrollbar = tk.Scrollbar(frame)
-# scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-#
-# # Text object for agreement text
-# text = tk.Text(frame, yscrollcommand=scrollbar.set)
-# text.insert(tk.INSERT, "Check\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\nCheck\n123123123\n")
-# text.pack(side=tk.TOP)
-# scrollbar.config(command=text.yview)  # Setting the scroll bar for the box
-#
-# checkVar = tk.IntVar()  # Check box variable
-#
-#
-# def agreementCheckBox():
-#     print("Entered Function")
-#     msg = messagebox.showinfo("Test", "User Login")
-#
-#
-# # Continue Button
-# cont = tk.Button(frame, text="Continue", command=agreementCheckBox, state=tk.DISABLED)
-# cont.pack(side=tk.BOTTOM)
-#
-#
-# def changeButtonStatus():
-#     print("Check Box Status:" + cont.cget('state'))
-#     if cont.cget('state') == 'disabled':
-#         cont.config(state=tk.ACTIVE)
-#     else:
-#         cont.config(state=tk.DISABLED)
-#
-#
-# # Check Box button
-# agree = tk.Checkbutton(frame, text="I have read and ACCEPT", variable=checkVar, onvalue=1, offvalue=0, command=changeButtonStatus)
-# agree.pack(side=tk.BOTTOM)
-#
-# root.mainloop()
-#

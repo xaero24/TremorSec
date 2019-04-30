@@ -1,15 +1,19 @@
 import csv
 import re
+import os
+
+# define
+idleTime = 15000
 
 
 def convertToCSV(path):
     """
     converts the key log txt to csv data base for later use
-    :param name of the key log file:
-    :return:
+    :param path:
     """
     with open(path, 'r') as in_file:
-        with open(path + ".csv", 'w', newline="") as out_file:
+        subPath = path.replace('/', "/ResultsCsv/")
+        with open(subPath + ".csv", 'w', newline="") as out_file:
             writer = csv.writer(out_file, delimiter=',', quotechar='"')
             writer.writerow(('date', 'time[h]', 'time[m]', 'time[s]', 'pressed'))
             for line in in_file:
@@ -47,18 +51,19 @@ def convertSecToList(path):
         secLen = len(seconds)
     subSeconds = list()
     for x in range(secLen):
-        if x != secLen - 1:
-            if seconds[x] <= 60000 < seconds[x + 1]:
-                subSeconds.append(60000 + (seconds[x+1] - seconds[x]))
-            else:
+        if x != secLen - 1:  # checks if end of list
+            if 40000 < seconds[x] <= 60000 and 0 <= seconds[x + 1] < 15000:  # checks if its a new second
+                if not ((seconds[x + 1] - seconds[x] + 60000) > idleTime):
+                    subSeconds.append(seconds[x+1] - seconds[x] + 60000)
+            elif not (seconds[x+1] - seconds[x]) > idleTime:
                 subSeconds.append(seconds[x+1] - seconds[x])
     avgSpeed = sum(subSeconds)/len(subSeconds)
     return avgSpeed
-# option = input("Reset? y/n \n")
-# if option == 'y':
-#     reset()
-# else:
-#     print("exit")
 
 
+def recordAvgSpeed(avgSpeed, stamp):
+    path = "Results/AvgSpeeds.csv"
+    with open(path, 'a', newline="") as outFile:
+        writer = csv.writer(outFile)
+        writer.writerow([stamp, avgSpeed])
 
