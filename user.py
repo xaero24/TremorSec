@@ -42,7 +42,7 @@ class User:
             print("A code will be sent to your eMail with a verification code...")
             verifier = random.randint(10000,99999)
             #Pull user email from server - TBI (stump is used now)
-            # PULL HERE
+            #PULL HERE
             #send email verification
             mailer = mailing.Mailing(self.email)
             mailer.sender(verifier)
