@@ -1,6 +1,6 @@
 import csv
 import re
-import os
+import conjnk as conct
 
 # define
 idleTime = 15000
@@ -73,4 +73,5 @@ def recordAvgSpeed(avgSpeed, stamp):
 
 
 def recordAvgSpeedServer(avgSpeed, stamp):
-    pass
+    serverWriter = conct.connection()
+    serverWriter.wirteNL(avgSpeed, stamp)

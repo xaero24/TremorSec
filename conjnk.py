@@ -1,5 +1,6 @@
 import pyodbc
 
+
 class connection(object):
 
     def __init__(self):
@@ -23,6 +24,3 @@ class connection(object):
         query = """INSERT INTO dbPark (date, avgSpeed) VALUES ('{0}',{1})""".format(dat, val)
         self.cursor.execute(query)
         self.cnxn.commit()
-
-c = connection()
-print(c.wirteNL("ajhvyah", 234.34))

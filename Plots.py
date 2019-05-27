@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 import csv
+import conjnk as conct
 
 file = 0
 server = 1
@@ -80,4 +81,6 @@ def getValues():
 
 
 def getServerValues():
-    pass
+    serverConnection = conct.connection()
+    vals = serverConnection.readAll()
+    return vals
