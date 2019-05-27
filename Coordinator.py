@@ -10,10 +10,13 @@ class Coordinator:
         try:
             self.con = conClass()
             self.con.wirteNL(date, value)
-            for (d, v) in self.log:
-                self.con.wirteNL(d, v)
-                self.log.pop(d)
+            print("Connection Succeded \n")
+            if(len(self.log) > 1):
+                for (d, v) in self.log:
+                    self.con.wirteNL(d, v)
+                    self.log.pop(d)
         except:
             print("Connection failed, try again later\n")
             self.log[date] =  value
+            return -1
         

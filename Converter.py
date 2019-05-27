@@ -1,9 +1,11 @@
 import csv
 import re
-import conjnk as conct
+import Coordinator as coord
+import time
 
 # define
 idleTime = 15000
+c = coord()
 
 
 def convertToCSV(path):
@@ -75,3 +77,10 @@ def recordAvgSpeed(avgSpeed, stamp):
 def recordAvgSpeedServer(avgSpeed, stamp):
     serverWriter = conct.connection()
     serverWriter.wirteNL(avgSpeed, stamp)
+    for i in 3:
+        print("Attempting connection: {0} of 3...\n".format(i))
+        if c.tryCommit(stamp, avgSpeed) == -1:
+            time.sleep(5)
+        else:
+            break
+
