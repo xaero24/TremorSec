@@ -1,5 +1,4 @@
-from thrift.transport import TSocket
-from thrift.protocol import TBinaryProtocol
+import eladFile as conClass
 
 class Coordinator:
     def __init__():
