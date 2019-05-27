@@ -75,8 +75,6 @@ def recordAvgSpeed(avgSpeed, stamp):
 
 
 def recordAvgSpeedServer(avgSpeed, stamp):
-    serverWriter = conct.connection()
-    serverWriter.wirteNL(avgSpeed, stamp)
     for i in 3:
         print("Attempting connection: {0} of 3...\n".format(i))
         if c.tryCommit(stamp, avgSpeed) == -1:
