@@ -57,7 +57,11 @@ def convertSecToList(path):
                     subSeconds.append(seconds[x+1] - seconds[x] + 60000)
             elif not (seconds[x+1] - seconds[x]) > idleTime:
                 subSeconds.append(seconds[x+1] - seconds[x])
-    avgSpeed = sum(subSeconds)/len(subSeconds)
+    try:
+        avgSpeed = sum(subSeconds)/len(subSeconds)
+    except:
+        print("No Data recorded")
+        return -99
     return avgSpeed
 
 
@@ -67,3 +71,6 @@ def recordAvgSpeed(avgSpeed, stamp):
         writer = csv.writer(outFile)
         writer.writerow([stamp, avgSpeed])
 
+
+def recordAvgSpeedServer(avgSpeed, stamp):
+    pass

@@ -4,7 +4,6 @@ import csv
 import subprocess as sp
 from BasicKeyLogger import KeyLogger
 from Plots import PlotCreate
-import Converter as converter
 from tkinter import messagebox
 LARGE_FONT = ("Verdana", 12)
 HEIGHT = 580
@@ -15,6 +14,9 @@ test1 = 1
 test1Phase2Var = 11
 test2 = 2
 normalMode = 3
+# graph mode
+file = 0
+server = 1
 
 
 class TremorSecApp(tk.Tk):
@@ -166,8 +168,11 @@ class Stats(tk.Frame):
         tk.Frame.__init__(self, parent)
         test = tk.Label(self, text="Stat Window")
         test.pack()
-        plot = PlotCreate()
+        plot = PlotCreate(file)
         tButton = tk.Button(self, text="Show Graph", command=lambda: PlotCreate.createPlot(plot))
+        tButton.pack(pady=30)
+        plotServer = PlotCreate(server)
+        tButton = tk.Button(self, text="Show Graph from server", command=lambda: PlotCreate.createPlot(plotServer))
         tButton.pack(pady=30)
         backButton = tk.Button(self, text="Back", command=lambda: controller.show_frame(OptionsWindow))
         backButton.pack(side=tk.BOTTOM)
@@ -268,6 +273,7 @@ class Test1(tk.Frame):
         KL.activateKeyLogger(test1)
         self.canvas.itemconfig(self.indicator, fill="#ef0404")
         self.update()
+        messagebox.showinfo("Times Up !!", "Times Up !! Continue")
 
 
 class Test1Phase2(tk.Frame):
@@ -317,6 +323,7 @@ class Test1Phase2(tk.Frame):
         KL.activateKeyLogger(test1Phase2Var)
         self.canvas.itemconfig(self.indicator, fill="#ef0404")
         self.update()
+        messagebox.showinfo("Times Up !!", "Times Up !! Continue")
 
 
 class Test2(tk.Frame):

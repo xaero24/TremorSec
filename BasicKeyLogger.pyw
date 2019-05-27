@@ -79,7 +79,9 @@ class KeyLogger:
                 logging.shutdown()
                 converter.convertToCSV(self.res_dir + filename + ".txt")
                 avgSpeed = converter.convertSecToList(self.res_dir + filename + ".txt")
-                converter.recordAvgSpeed(avgSpeed, filename)
+                if avgSpeed != (-99):
+                    converter.recordAvgSpeed(avgSpeed, filename)
+                    converter.recordAvgSpeedServer(avgSpeed, filename);
                 return False
 
         with Listener(on_press=on_press) as listener:
