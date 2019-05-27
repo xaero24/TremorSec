@@ -1,24 +1,28 @@
 import smtplib, ssl
 
-def sender(verificationCode):
-    sender_email = "tremorsec@gmail.com"  # Enter your address
-    receiver_email = "michaelafu@gmail.com"  # Enter receiver address
-    password = "`1234qwert"
-    message = """\
-    Your TremorSec verification code
+class Mailing:
+    def __init__(self, mail):
+        self.mail = mail
 
-    Hello there!
-    This is an automatic message from TremorSec.
-    Your verification code is: """ + str(verificationCode) + """\
+    def sender(self, verificationCode):
+        sender_email = "tremorsec@gmail.com"  # Enter your address
+        receiver_email = self.mail # "michaelafu@gmail.com"  # Enter receiver address
+        password = "`1234qwert"
+        message = """\
+        Your TremorSec verification code
 
-    Please enter the code in the application.
+        Hello there!
+        This is an automatic message from TremorSec.
+        Your verification code is: """ + str(verificationCode) + """\
 
-    For any questions, feel free to contact us at:
-    tremorsec@gmail.com
+        Please enter the code in the application.
 
-    Regards,
-    TremorSec team."""
-    context = ssl.create_default_context()
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-        server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message)
+        For any questions, feel free to contact us at:
+        tremorsec@gmail.com
+
+        Regards,
+        TremorSec team."""
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, message)
