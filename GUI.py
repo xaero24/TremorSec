@@ -5,6 +5,11 @@ import subprocess as sp
 from BasicKeyLogger import KeyLogger
 from Plots import PlotCreate
 from tkinter import messagebox
+import connector
+import sha1
+
+connection = connector.connection()  # Creates DB Connection Module
+
 LARGE_FONT = ("Verdana", 12)
 HEIGHT = 580
 WIDTH = 500
@@ -30,7 +35,7 @@ class TremorSecApp(tk.Tk):
 
         self.frames = {}
 
-        for F in (AgreementPage, UserLogin, OptionsWindow, Stats, StartStop, Test1, Test2, Test1Phase2):
+        for F in (AgreementPage, UserLogin, OptionsWindow, Stats, StartStop, Test1, Test2, Test1Phase2, SignUp):
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -101,9 +106,9 @@ class UserLogin(tk.Frame):
         self.label_password = tk.Label(frame, text="Password")
 
         self.entry_username = tk.Entry(frame)
-        self.entry_username.insert(0, "tzvi")  # TODO: REMOVE
+        # self.entry_username.insert(0, "tzvi")  # TODO: REMOVE
         self.entry_password = tk.Entry(frame, show="*")
-        self.entry_password.insert(0, "1234")  # TODO: REMOVE
+        # self.entry_password.insert(0, "1234")  # TODO: REMOVE
 
         self.label_username.grid(row=1)
         self.label_password.grid(row=2)
@@ -113,27 +118,68 @@ class UserLogin(tk.Frame):
         self.logbtn = tk.Button(frame, text="Login", command=lambda: self._login_btn_clicked(controller))
         self.logbtn.grid(columnspan=2)
 
+        self.logbtn = tk.Button(frame, text="Sign Up", command=lambda: controller.show_frame(SignUp))
+        self.logbtn.grid(columnspan=2)
+
         frame.place(relx=0.17, rely=0.3)
 
     def _login_btn_clicked(self, controller):
-        # print("Clicked")
+        userDb = connection.readUsers()  # Load all user Data base as Dictionary
+        username = self.entry_username.get()
+        password = self.entry_password.get()
+        local_Sha = sha1.shaControl(password)  # Creates Sha1 Module
+        local_Sha.sha1()  # Converts the password to Hash
+
+        if username in userDb:  # Checks if username in DB
+            if userDb[username] == local_Sha.password:  # Compares 2 passwords
+                messagebox.showinfo("Login info", "Welcome " + username)
+                # Checks if resultfile.csv exists, if not creates one and write in the first line the username
+                exists = os.path.isfile("resultsFile.csv")
+                if not exists:
+                    resultfile = open("resultsFile.csv", 'a')
+                    fileWriter = csv.writer(resultfile)
+                    fileWriter.writerow(["User info: ", username])
+                    resultfile.close()
+                controller.show_frame(OptionsWindow)
+            else:
+                messagebox.showerror("Login error", "Incorrect username or password")
+        else:
+            messagebox.showerror("Login error", "Incorrect username or password")
+
+
+class SignUp(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        frame = tk.Frame(self)
+
+        self.label_username = tk.Label(frame, text="Username")
+        self.label_password = tk.Label(frame, text="Password")
+
+        self.entry_username = tk.Entry(frame)
+        self.entry_password = tk.Entry(frame, show="*")
+
+        self.label_username.grid(row=1)
+        self.label_password.grid(row=2)
+        self.entry_username.grid(row=1, column=1)
+        self.entry_password.grid(row=2, column=1)
+
+        self.logbtn = tk.Button(frame, text="Sign Up", command=lambda: self._login_btn_clicked(controller))
+        self.logbtn.grid(columnspan=2)
+
+        self.backButton = tk.Button(frame, text="Back", command=lambda: controller.show_frame(UserLogin))
+        self.backButton.grid(columnspan=2)
+        frame.place(relx=0.17, rely=0.3)
+
+    def _login_btn_clicked(self, controller):
         username = self.entry_username.get()
         password = self.entry_password.get()
 
-        # print(username, password)
+        if connection.signUp_User(username, password):
+            messagebox.showinfo("Sing Up", "Added New User: " + username)
 
-        if username == "tzvi" and password == "1234":
-            messagebox.showinfo("Login info", "Welcome " + username)
-            # Checks if resultfile.csv exists, if not creates one and write in the first line the username
-            exists = os.path.isfile("resultsFile.csv")
-            if not exists:
-                resultfile = open("resultsFile.csv", 'a')
-                fileWriter = csv.writer(resultfile)
-                fileWriter.writerow(["User info: ", username])
-                resultfile.close()
-            controller.show_frame(OptionsWindow)
         else:
-            messagebox.showerror("Login error", "Incorrect username")
+            messagebox.showerror("Sing Up", "ERROR Adding new user")
 
 
 class OptionsWindow(tk.Frame):

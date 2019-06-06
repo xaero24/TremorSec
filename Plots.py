@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 import csv
-import conjnk as conct
+import connector as conct
 
 file = 0
 server = 1

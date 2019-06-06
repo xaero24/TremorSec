@@ -1,22 +1,32 @@
-import conjnk as conClass
+from connector import connection
+
+"""
+This class is coordinating all the traffic. We want to record
+new avg speed value to the server so this coordinator checking if 
+he can connect to the server and write the new value.
+If he didnt succeed the class records the value so he can send
+it later when he can connect so we will not loose data.
+"""
+
 
 class Coordinator:
     def __init__(self):
-        #Use connection strings
+        # Use connection strings
         self.con = None
         self.log = {}
 
     def tryCommit(self, date, value):
+        """"Try commit the values if dont succeed saves the
+            the values int the dictionary for later value send"""
         try:
-            self.con = conClass()
-            self.con.wirteNL(date, value)
+            self.con = connection()
             print("Connection Succeded \n")
-            if(len(self.log) > 1):
-                for (d, v) in self.log:
-                    self.con.wirteNL(d, v)
-                    self.log.pop(d)
+            if bool(self.log):
+                for key in self.log:
+                    self.con.wirteNL(key, self.log[key])
+                self.log = {}
+            self.con.wirteNL(date, value)
         except:
             print("Connection failed, try again later\n")
-            self.log[date] =  value
+            self.log[date] = value
             return -1
-        
