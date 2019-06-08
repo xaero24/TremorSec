@@ -15,15 +15,17 @@ class PlotCreate:
         self.ylabel = "Avg Speed"
         self.xlabel = "Test no"
         self.mode = mode
+        self.user = None
 
-    def createPlot(self):
-        vals = getMaxMinTests()
+    def createPlot(self, current_User):
+        self.user = current_User  # Sets User Class obj
+        vals = getMaxMinTests(self)
         self.max = vals[0][3]
         self.min = vals[1][3]
         if self.mode is file:
-            currentValues = getValues()
+            currentValues = getValues(self)
         elif self.mode is server:
-            currentValues = getServerValues()
+            currentValues = getServerValues_User(self.user.user_server_id)
         if currentValues is not None:
             currentValues.insert(0, vals[2][3])
         else:
@@ -57,30 +59,40 @@ class PlotCreate:
         plt.show()
 
 
-def getMaxMinTests():
+def getMaxMinTests(plot):
     exists = os.path.isfile("resultsFile.csv")
     if exists:
+        plot.user.fernet_class.decrypt_file("resultsFile.csv")
         with open("resultsFile.csv", 'r') as cfile:
             reader = csv.reader(cfile, delimiter=',')
             vals = [row for idx, row in enumerate(reader) if idx in (2, 3, 4)]
             print(vals)
             for row in vals:
                 row[3] = float(row[3])
+            plot.user.fernet_class.encrypt_file("resultsFile.csv")
             return vals
 
 
-def getValues():
+def getValues(plot):
     exists = os.path.isfile("Results/AvgSpeeds.csv")
     if exists:
-        vals = list()
-        with open("Results/AvgSpeeds.csv", 'r') as file:
-            reader = csv.reader(file, delimiter=',')
-            for line in reader:
-                vals.append(float(line[1]))
+        if plot.user.fernet_class.decrypt_file("Results/AvgSpeeds.csv"):
+            vals = list()
+            with open("Results/AvgSpeeds.csv", 'r') as file:
+                reader = csv.reader(file, delimiter=',')
+                for line in reader:
+                    vals.append(float(line[1]))
+            plot.user.fernet_class.encrypt_file("Results/AvgSpeeds.csv")
             return vals
 
 
 def getServerValues():
     serverConnection = conct.connection()
     vals = serverConnection.readAll()
+    return vals
+
+
+def getServerValues_User(userId):
+    serverConnection = conct.connection()
+    vals = serverConnection.read_UserId(userId)
     return vals

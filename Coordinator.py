@@ -15,18 +15,20 @@ class Coordinator:
         self.con = None
         self.log = {}
 
-    def tryCommit(self, date, value):
+    def tryCommit(self, userId, date, value):
         """"Try commit the values if dont succeed saves the
             the values int the dictionary for later value send"""
         try:
             self.con = connection()
-            print("Connection Succeded \n")
+            print("Connection Succeed \n")
             if bool(self.log):
                 for key in self.log:
-                    self.con.wirteNL(key, self.log[key])
+                    self.con.writeNL(key, self.log[key])
                 self.log = {}
-            self.con.wirteNL(date, value)
-        except:
+            self.con.writeNL(userId, date, value)
+            print("Sent Data to Serer !! [V]")
+        except Exception as e:
+            print(e)
             print("Connection failed, try again later\n")
             self.log[date] = value
             return -1

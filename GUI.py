@@ -7,8 +7,12 @@ from Plots import PlotCreate
 from tkinter import messagebox
 import connector
 import sha1
+import fernetAES
+import user
+from cryptography.fernet import InvalidToken
 
 connection = connector.connection()  # Creates DB Connection Module
+current_user = user.User()  # Creates Global User Obj for later use
 
 LARGE_FONT = ("Verdana", 12)
 HEIGHT = 580
@@ -131,7 +135,7 @@ class UserLogin(tk.Frame):
         local_Sha.sha1()  # Converts the password to Hash
 
         if username in userDb:  # Checks if username in DB
-            if userDb[username] == local_Sha.password:  # Compares 2 passwords
+            if userDb[username][0] == local_Sha.password:  # Compares 2 passwords
                 messagebox.showinfo("Login info", "Welcome " + username)
                 # Checks if resultfile.csv exists, if not creates one and write in the first line the username
                 exists = os.path.isfile("resultsFile.csv")
@@ -140,6 +144,22 @@ class UserLogin(tk.Frame):
                     fileWriter = csv.writer(resultfile)
                     fileWriter.writerow(["User info: ", username])
                     resultfile.close()
+                if userDb[username][2] is not None:
+                    KL.set_User(username, userDb[username][1], fernetAES.fernet_Encryption(userDb[username][2].encode()))  # Sets the KeyLogger with values: UserName, User Server Id, Fernet Key class
+                    current_user.user_name = username
+                    current_user.user_server_id = userDb[username][1]
+                    current_user.fernet_class = fernetAES.fernet_Encryption(userDb[username][2].encode())
+                    if not exists:
+                        current_user.fernet_class.encrypt_file("resultsFile.csv")
+                    else:
+                        try:
+                            current_user.fernet_class.decrypt_file("resultsFile.csv")
+                            current_user.fernet_class.encrypt_file("resultsFile.csv")
+                        except InvalidToken:
+                            messagebox.showerror("Bad User", "User does not match the current machine \nThe Program will end \nEnter with correct User")
+                            exit(1)
+                else:
+                    KL.set_User(username, userDb[username][1])
                 controller.show_frame(OptionsWindow)
             else:
                 messagebox.showerror("Login error", "Incorrect username or password")
@@ -155,31 +175,37 @@ class SignUp(tk.Frame):
 
         self.label_username = tk.Label(frame, text="Username")
         self.label_password = tk.Label(frame, text="Password")
+        self.label_email = tk.Label(frame, text="Email")
 
         self.entry_username = tk.Entry(frame)
         self.entry_password = tk.Entry(frame, show="*")
+        self.entry_email = tk.Entry(frame)
 
         self.label_username.grid(row=1)
         self.label_password.grid(row=2)
+        self.label_email.grid(row=3)
         self.entry_username.grid(row=1, column=1)
         self.entry_password.grid(row=2, column=1)
+        self.entry_email.grid(row=3, column=1)
 
-        self.logbtn = tk.Button(frame, text="Sign Up", command=lambda: self._login_btn_clicked(controller))
+        self.logbtn = tk.Button(frame, text="Sign Up", command=lambda: self._login_btn_clicked())
         self.logbtn.grid(columnspan=2)
 
         self.backButton = tk.Button(frame, text="Back", command=lambda: controller.show_frame(UserLogin))
         self.backButton.grid(columnspan=2)
         frame.place(relx=0.17, rely=0.3)
 
-    def _login_btn_clicked(self, controller):
+    def _login_btn_clicked(self):
         username = self.entry_username.get()
         password = self.entry_password.get()
-
-        if connection.signUp_User(username, password):
-            messagebox.showinfo("Sing Up", "Added New User: " + username)
-
+        userDb = connection.readUsers()  # Load all user Data base as Dictionary
+        if username not in userDb:  # checks if userName already exists
+            if connection.signUp_User(username, password):
+                messagebox.showinfo("Sing Up", "Added New User: " + username)
+            else:
+                messagebox.showerror("Sing Up", "ERROR Adding new user")
         else:
-            messagebox.showerror("Sing Up", "ERROR Adding new user")
+            messagebox.showerror("Sing Up", "ERROR User Name Already Exists")
 
 
 class OptionsWindow(tk.Frame):
@@ -215,10 +241,10 @@ class Stats(tk.Frame):
         test = tk.Label(self, text="Stat Window")
         test.pack()
         plot = PlotCreate(file)
-        tButton = tk.Button(self, text="Show Graph", command=lambda: PlotCreate.createPlot(plot))
+        tButton = tk.Button(self, text="Show Graph", command=lambda: PlotCreate.createPlot(plot, current_user))
         tButton.pack(pady=30)
         plotServer = PlotCreate(server)
-        tButton = tk.Button(self, text="Show Graph from server", command=lambda: PlotCreate.createPlot(plotServer))
+        tButton = tk.Button(self, text="Show Graph from server", command=lambda: PlotCreate.createPlot(plotServer, current_user))
         tButton.pack(pady=30)
         backButton = tk.Button(self, text="Back", command=lambda: controller.show_frame(OptionsWindow))
         backButton.pack(side=tk.BOTTOM)
@@ -242,6 +268,12 @@ class StartStop(tk.Frame):
             print("Directory ", dirName + "/ResultsCsv", " Created ")
         else:
             print("Directory ", dirName + "/ResultsCsv", " already exists")
+
+        if not os.path.exists(dirName + "/Encrypted"):
+            os.mkdir(dirName + "/Encrypted")
+            print("Directory ", dirName + "/Encrypted", " Created ")
+        else:
+            print("Directory ", dirName + "/Encrypted", " already exists")
 
         # exists = os.path.isfile(dirName + "AvgSpeeds.txt")
         # if not exists:

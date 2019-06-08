@@ -2,25 +2,31 @@ from hashlib import sha1, sha256
 import random, mailing
 import smtplib, ssl, datetime
 
+
 class User:
     def __init__(self):
-        self.firstName = input("First name: ")
-        self.lastName = input("Last name: ")
-        self.dateOfBirth = datetime.datetime.strptime(
-            input("Day of birth (2 digits): ") + '-' + 
-            input("Month of birth (2 digits): ") + '-' + 
-            input("Year of birth (4 digits): "), 
-            '%d-%m-%Y'
-        ).date()
-        self.email = input("E-mail address: ")
-        self.username = input("Username: ")
-        pass1 = input("Password: ")
-        pass2 = input("Repeat password: ")
-        while pass1 != pass2:
-            print("Passwrds don't match, try again.")
-            pass1 = input("Password: ")
-            pass2 = input("Repeat password: ")
-        self.password = self.enc(pass1, self.username) #To be removed/modified. Info is sent to a remote database.
+        self.firstName = None
+        self.user_server_id = None
+        self.user_name = None
+        self.fernet_class = None
+
+        # self.firstName = input("First name: ")
+        # self.lastName = input("Last name: ")
+        # self.dateOfBirth = datetime.datetime.strptime(
+        #     input("Day of birth (2 digits): ") + '-' +
+        #     input("Month of birth (2 digits): ") + '-' +
+        #     input("Year of birth (4 digits): "),
+        #     '%d-%m-%Y'
+        # ).date()
+        # self.email = input("E-mail address: ")
+        # self.username = input("Username: ")
+        # pass1 = input("Password: ")
+        # pass2 = input("Repeat password: ")
+        # while pass1 != pass2:
+        #     print("Passwrds don't match, try again.")
+        #     pass1 = input("Password: ")
+        #     pass2 = input("Repeat password: ")
+        # self.password = self.enc(pass1, self.username)  # To be removed/modified. Info is sent to a remote database.
         
     def enc (self, passwd, usrname):
         """
