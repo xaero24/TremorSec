@@ -1,5 +1,6 @@
 import pyodbc
 import sha1
+import fernetAES
 
 
 class connection(object):
@@ -16,12 +17,12 @@ class connection(object):
         row = self.cursor.fetchone()
         times = []
         while row:
-            times.append(row[2])
+            times.append(row[3])
             row = self.cursor.fetchone()
         return times
 
-    def wirteNL(self, dat, val):
-        query = """INSERT INTO dbPark (date, avgSpeed) VALUES ('{0}',{1})""".format(dat, val)
+    def writeNL(self, usrId, dat, val):
+        query = """INSERT INTO dbPark (userId, date, avgSpeed) VALUES ({0},'{1}',{2})""".format(usrId, dat, val)
         self.cursor.execute(query)
         self.cnxn.commit()
 
@@ -31,15 +32,16 @@ class connection(object):
         self.cursor.execute(query)
         row = self.cursor.fetchone()
         while row:
-            values[row[1]] = row[2]
+            values[row[1]] = (row[2], row[0], row[3])
             row = self.cursor.fetchone()
         return values
 
-    def signUp_User(self, username, password):
+    def signUp_User(self, username, password, email):
         try:
             Hash_Password = sha1.shaControl(password)  # Creating Hashing module
             Hash_Password.sha1()  # Hashing the password
-            query = """INSERT INTO dbUser (UserName, HashPass) VALUES ('{0}','{1}')""".format(username, Hash_Password.password)
+            fernetKey = (fernetAES.get_Key()).decode()
+            query = """INSERT INTO dbUser (UserName, HashPass, EncKey, Email) VALUES ('{0}','{1}','{2}','{3}')""".format(username, Hash_Password.password, fernetKey, email)
             self.cursor.execute(query)
             self.cnxn.commit()
             print("[!] Added User:\nUser Name: {0} \nHash Password: {1}".format(username, Hash_Password.password))
@@ -47,6 +49,20 @@ class connection(object):
         except:
             print("Error Adding new User")
             return False
+
+    def read_UserId(self, UserID):
+        """
+        Returns only the data relevant to user ID
+        :param UserID
+        :return: Data
+        """
+        self.cursor.execute("SELECT * FROM dbPark WHERE userId = {0}".format(UserID))
+        row = self.cursor.fetchone()
+        times = []
+        while row:
+            times.append(row[3])
+            row = self.cursor.fetchone()
+        return times
 
 
 # cont = connection()

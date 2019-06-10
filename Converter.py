@@ -2,9 +2,13 @@ import csv
 import re
 import time
 from Coordinator import Coordinator
+import fernetAES
+from cryptography.fernet import InvalidToken
+import os
 # define
 idleTime = 15000
 c = Coordinator()
+
 
 def convertToCSV(path):
     """
@@ -65,19 +69,42 @@ def convertSecToList(path):
     return avgSpeed
 
 
-def recordAvgSpeed(avgSpeed, stamp):
+def recordAvgSpeed(avgSpeed, stamp, encryptAES):
     path = "Results/AvgSpeeds.csv"
+    exists = os.path.isfile("Results/AvgSpeeds.csv")
+    if exists:
+        encryptAES.decrypt_file(path)
     with open(path, 'a', newline="") as outFile:
         writer = csv.writer(outFile)
         writer.writerow([stamp, avgSpeed])
+    encryptAES.encrypt_file(path)
 
 
-def recordAvgSpeedServer(avgSpeed, stamp):
-    c.tryCommit(stamp, avgSpeed)
-    # for i in range(3):
-    #     print("Attempting connection: {0} of 3...\n".format(i+1))
-    #     if c.tryCommit(stamp, avgSpeed) == -1:
-    #         time.sleep(5)
-    #     else:
-    #         break
+def recordAvgSpeedServer(userId, avgSpeed, stamp):
+    c.tryCommit(userId, stamp, avgSpeed)
 
+
+def encrypt_File_Data(path, encryptAES):
+    with open(path, 'rb') as in_file:
+        data = in_file.read()
+        subPath = path.replace('/', "/Encrypted/")
+        with open(subPath, 'wb') as out_file:
+            out_file.write(encryptAES.fernet_Key_obj.encrypt(data))
+
+
+def decrypt_File_Data(path, encryptAES):
+    with open(path, 'rb') as in_file:
+        data = in_file.read()
+        try:
+            data = encryptAES.fernet_Key_obj.decrypt(data).decode()
+        except InvalidToken:
+            print("[ERROR] Bad Key Encryption")
+            return
+        with open(path + '_decrypted.txt', 'w', newline="") as out_file:
+            out_file.write(data)
+
+
+# region  Functionality Test
+# c = fernetAES.fernet_Encryption('oP6zdSCHd1JH0RFcvC8OKpSplrecJTd9Xw4lSGfFov4=')
+# decrypt_File('Results/Encrypted/2019-06-08_01.44.24.371549.txt', c)
+# endregion
