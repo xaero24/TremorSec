@@ -5,10 +5,10 @@ import smtplib, ssl, datetime
 
 class User:
     def __init__(self):
-        self.firstName = None
         self.user_server_id = None
         self.user_name = None
         self.fernet_class = None
+        self.email = None
 
         # self.firstName = input("First name: ")
         # self.lastName = input("Last name: ")
@@ -38,24 +38,48 @@ class User:
         key = (sha1(usrname.encode('utf-8')).hexdigest())[0:15]
         return sha256((passwd + key).encode('utf-8')).hexdigest()
 
-    def check (self, passwd, usrname):
+    def check (self):
         """
         The user is passed through two verification steps:
         1. Password is checked according to the username.
         2. E-mail verification code is requested.
         """
-        if self.enc(passwd, usrname) == self.password: #To be modified, SHA is pulled from server.
-            print("A code will be sent to your eMail with a verification code...")
-            verifier = random.randint(10000,99999)
-            #Pull user email from server - TBI (stump is used now)
-            #PULL HERE
-            #send email verification
-            mailer = mailing.Mailing(self.email)
-            mailer.sender(verifier)
-            receivedCode = int(input("Your code here: "))
-            if receivedCode == verifier:
-                print("Access granted!")
-            else:
-                print("Wrong code")
-        else:
-            print("Wrong password or username")
+
+        print("A code will be sent to your eMail with a verification code...")
+        verifier = random.randint(10000, 99999)
+        # Pull user email from server - TBI (stump is used now)
+        # PULL HERE
+        # send email verification
+        mailer = mailing.Mailing(self.email)
+        mailer.sender(verifier)
+        return verifier
+        # receivedCode = int(input("Your code here: "))
+        # if receivedCode == verifier:
+        #     print("Access granted!")
+        # else:
+        #     print("Wrong code")
+
+
+    # region Previous Version for Backup
+    # def check (self, passwd, usrname):
+    #     """
+    #     The user is passed through two verification steps:
+    #     1. Password is checked according to the username.
+    #     2. E-mail verification code is requested.
+    #     """
+    #     if self.enc(passwd, usrname) == self.password:  # To be modified, SHA is pulled from server.
+    #         print("A code will be sent to your eMail with a verification code...")
+    #         verifier = random.randint(10000, 99999)
+    #         # Pull user email from server - TBI (stump is used now)
+    #         # PULL HERE
+    #         # send email verification
+    #         mailer = mailing.Mailing(self.email)
+    #         mailer.sender(verifier)
+    #         receivedCode = int(input("Your code here: "))
+    #         if receivedCode == verifier:
+    #             print("Access granted!")
+    #         else:
+    #             print("Wrong code")
+    #     else:
+    #         print("Wrong password or username")
+    # endregion

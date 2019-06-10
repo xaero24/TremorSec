@@ -47,6 +47,21 @@ class TremorSecApp(tk.Tk):
         self.show_frame(AgreementPage)
 
     def show_frame(self, cont):
+        name = self.frames[cont].winfo_name()
+        # Checks if the window required is option window and done_test1 declared and set to TRUE
+        # Meaning the user finished the first test1 and the button should be disabled
+        if self.frames[cont].winfo_name() == '!optionswindow' and 'done_test1' in globals() and done_test1 is True:
+            frame = self.frames[cont]
+            frame.Test1Button.config(state=tk.DISABLED)
+        # Same for test No 2
+        if self.frames[cont].winfo_name() == '!optionswindow' and 'done_test2' in globals() and done_test2 is True:
+            frame = self.frames[cont]
+            frame.Test2Button.config(state=tk.DISABLED)
+        # If the user finished both tests => checks the length of the reasultsFile.csv
+        if self.frames[cont].winfo_name() == '!optionswindow' and 'done_tests' in globals() and done_tests is True:
+            frame = self.frames[cont]
+            frame.Test1Button.config(state=tk.DISABLED)
+            frame.Test2Button.config(state=tk.DISABLED)
         if cont == UserLogin:
             self.geometry('{}x{}'.format(300, 300))
         frame = self.frames[cont]
@@ -134,6 +149,8 @@ class UserLogin(tk.Frame):
         local_Sha = sha1.shaControl(password)  # Creates Sha1 Module
         local_Sha.sha1()  # Converts the password to Hash
 
+        global done_tests  # For disabling the buttons if user finished the tests
+
         if username in userDb:  # Checks if username in DB
             if userDb[username][0] == local_Sha.password:  # Compares 2 passwords
                 messagebox.showinfo("Login info", "Welcome " + username)
@@ -154,7 +171,14 @@ class UserLogin(tk.Frame):
                     else:
                         try:
                             current_user.fernet_class.decrypt_file("resultsFile.csv")
-                            current_user.fernet_class.encrypt_file("resultsFile.csv")
+                            try:
+                                with open("resultsFile.csv", "r") as file2:
+                                    data = file2.read()
+                                    data = data.split(',')  # len 11 - The length of the file if user finished both tests
+                                    if len(data) is 11:
+                                        done_tests = True
+                            finally:
+                                current_user.fernet_class.encrypt_file("resultsFile.csv")
                         except InvalidToken:
                             messagebox.showerror("Bad User", "User does not match the current machine \nThe Program will end \nEnter with correct User")
                             exit(1)
@@ -170,7 +194,7 @@ class UserLogin(tk.Frame):
 class SignUp(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-
+        self.parent = parent
         frame = tk.Frame(self)
 
         self.label_username = tk.Label(frame, text="Username")
@@ -198,14 +222,50 @@ class SignUp(tk.Frame):
     def _login_btn_clicked(self):
         username = self.entry_username.get()
         password = self.entry_password.get()
+        email = self.entry_email.get()
         userDb = connection.readUsers()  # Load all user Data base as Dictionary
-        if username not in userDb:  # checks if userName already exists
-            if connection.signUp_User(username, password):
-                messagebox.showinfo("Sing Up", "Added New User: " + username)
+        if username == '' or password == '' or email == '':
+            messagebox.showerror("Sing Up", "ERROR All Fields Required")
+        elif username not in userDb:  # checks if userName already exists
+            # TODO: check for user inputs and breakpoints
+            usr = user.User()
+            usr.user_name = username
+            usr.email = email
+            self.pop = Verification_PopUp(self.parent, usr.check())
+            self.parent.wait_window(self.pop.top)
+            if self.pop.ok_bit is True:
+                if connection.signUp_User(username, password, email):
+                    messagebox.showinfo("Sing Up", "Added New User: " + username)
+                else:
+                    messagebox.showerror("Sing Up", "ERROR Adding new user")
             else:
-                messagebox.showerror("Sing Up", "ERROR Adding new user")
+                messagebox.showerror("Sing Up", "ERROR \nWrong Verification Code \nTry Again")
         else:
             messagebox.showerror("Sing Up", "ERROR User Name Already Exists")
+
+
+class Verification_PopUp(tk.Frame):
+    def __init__(self, parent, verifier=None):
+        tk.Frame.__init__(self, parent)
+        self.verifier = verifier
+        top = self.top = tk.Toplevel(parent)
+        self.l = tk.Label(top, text="Enter Verification Code")
+        self.l.pack()
+        self.e = tk.Entry(top)
+        self.e.pack()
+        self.b = tk.Button(top, text='Ok', command=self.cleanup)
+        self.b.pack()
+        self.ok_bit = False
+
+    def cleanup(self):
+        value = self.e.get()
+        try:
+            value = int(value)
+            if value == self.verifier:
+                self.ok_bit = True
+        except ValueError:
+            messagebox.showerror("ERROR", "Input Number should be only Numbers.")
+        self.top.destroy()
 
 
 class OptionsWindow(tk.Frame):
@@ -399,6 +459,8 @@ class Test1Phase2(tk.Frame):
         self.canvas.itemconfig(self.indicator, fill="#38ce0a")
         self.update()
         KL.activateKeyLogger(test1Phase2Var)
+        global done_test1
+        done_test1 = True
         self.canvas.itemconfig(self.indicator, fill="#ef0404")
         self.update()
         messagebox.showinfo("Times Up !!", "Times Up !! Continue")
@@ -451,6 +513,8 @@ class Test2(tk.Frame):
         self.canvas.itemconfig(self.indicator, fill="#38ce0a")
         self.update()
         KL.activateKeyLogger(test2)
+        global done_test2
+        done_test2 = True
         self.canvas.itemconfig(self.indicator, fill="#ef0404")
         self.update()
 

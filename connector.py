@@ -36,12 +36,12 @@ class connection(object):
             row = self.cursor.fetchone()
         return values
 
-    def signUp_User(self, username, password):
+    def signUp_User(self, username, password, email):
         try:
             Hash_Password = sha1.shaControl(password)  # Creating Hashing module
             Hash_Password.sha1()  # Hashing the password
             fernetKey = (fernetAES.get_Key()).decode()
-            query = """INSERT INTO dbUser (UserName, HashPass, EncKey) VALUES ('{0}','{1}','{2}')""".format(username, Hash_Password.password, fernetKey)
+            query = """INSERT INTO dbUser (UserName, HashPass, EncKey, Email) VALUES ('{0}','{1}','{2}','{3}')""".format(username, Hash_Password.password, fernetKey, email)
             self.cursor.execute(query)
             self.cnxn.commit()
             print("[!] Added User:\nUser Name: {0} \nHash Password: {1}".format(username, Hash_Password.password))
