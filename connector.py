@@ -9,7 +9,11 @@ class connection(object):
         database = 'par'
         username = 'paradmin'
         password = 'Padmin13'
-        self.cnxn = pyodbc.connect('DRIVER={ODBC Driver 13 for SQL Server}; SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+        try:
+            self.cnxn = pyodbc.connect('DRIVER={ODBC Driver 13 for SQL Server}; SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password)
+        except:
+            self.cnxn = pyodbc.connect(
+                'DRIVER={ODBC Driver 17 for SQL Server}; SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
         self.cursor = self.cnxn.cursor()
 
     def readAll(self):
