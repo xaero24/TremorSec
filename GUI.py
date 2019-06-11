@@ -155,12 +155,14 @@ class UserLogin(tk.Frame):
             if userDb[username][0] == local_Sha.password:  # Compares 2 passwords
                 messagebox.showinfo("Login info", "Welcome " + username)
                 # Checks if resultfile.csv exists, if not creates one and write in the first line the username
+                first_entrance_bit = False
                 exists = os.path.isfile("resultsFile.csv")
                 if not exists:
-                    resultfile = open("resultsFile.csv", 'a')
+                    resultfile = open("resultsFile.csv", 'a+')
                     fileWriter = csv.writer(resultfile)
                     fileWriter.writerow(["User info: ", username])
                     resultfile.close()
+                    first_entrance_bit = True
                 if userDb[username][2] is not None:
                     KL.set_User(username, userDb[username][1], fernetAES.fernet_Encryption(userDb[username][2].encode()))  # Sets the KeyLogger with values: UserName, User Server Id, Fernet Key class
                     current_user.user_name = username
@@ -168,7 +170,7 @@ class UserLogin(tk.Frame):
                     current_user.fernet_class = fernetAES.fernet_Encryption(userDb[username][2].encode())
                     if not exists:
                         current_user.fernet_class.encrypt_file("resultsFile.csv")
-                    else:
+                    elif first_entrance_bit is False:
                         try:
                             current_user.fernet_class.decrypt_file("resultsFile.csv")
                             try:
