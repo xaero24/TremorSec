@@ -11,6 +11,8 @@ import fernetAES
 import user
 from cryptography.fernet import InvalidToken
 
+
+
 connection = connector.connection()  # Creates DB Connection Module
 current_user = user.User()  # Creates Global User Obj for later use
 
@@ -124,9 +126,9 @@ class UserLogin(tk.Frame):
         self.label_username = tk.Label(frame, text="Username")
         self.label_password = tk.Label(frame, text="Password")
 
-        self.entry_username = tk.Entry(frame)
+        self.entry_username = LimEntry(frame)
         # self.entry_username.insert(0, "tzvi")  # TODO: REMOVE
-        self.entry_password = tk.Entry(frame, show="*")
+        self.entry_password = LimEntry(frame, show="*")
         # self.entry_password.insert(0, "1234")  # TODO: REMOVE
 
         self.label_username.grid(row=1)
@@ -203,9 +205,9 @@ class SignUp(tk.Frame):
         self.label_password = tk.Label(frame, text="Password")
         self.label_email = tk.Label(frame, text="Email")
 
-        self.entry_username = tk.Entry(frame)
-        self.entry_password = tk.Entry(frame, show="*")
-        self.entry_email = tk.Entry(frame)
+        self.entry_username = LimEntry(frame)
+        self.entry_password = LimEntry(frame, show="*")
+        self.entry_email = LimEntry(frame)
 
         self.label_username.grid(row=1)
         self.label_password.grid(row=2)
@@ -253,7 +255,7 @@ class Verification_PopUp(tk.Frame):
         top = self.top = tk.Toplevel(parent)
         self.l = tk.Label(top, text="Enter Verification Code")
         self.l.pack()
-        self.e = tk.Entry(top)
+        self.e = LimEntry(top)
         self.e.pack()
         self.b = tk.Button(top, text='Ok', command=self.cleanup)
         self.b.pack()
@@ -520,6 +522,28 @@ class Test2(tk.Frame):
         self.canvas.itemconfig(self.indicator, fill="#ef0404")
         self.update()
 
+
+class LimEntry(tk.Entry):
+    def __init__(self, *args, **kwargs):
+        tk.Entry.__init__(self, *args, **kwargs)
+
+        vcmd = (self.register(self.on_validate),"%P")
+        self.configure(validate="key", validatecommand=vcmd)
+
+    def disallow(self):
+        self.bell()
+
+    def on_validate(self, new_value):
+        try:
+            if new_value.strip() == "": return True
+            if len(new_value) > 80:
+                self.disallow()
+                return False
+        except ValueError:
+            self.disallow()
+            return False
+
+        return True
 
 KL = KeyLogger()
 app = TremorSecApp()

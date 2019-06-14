@@ -5,8 +5,8 @@ import fernetAES
 
 class connection(object):
     def __init__(self):
-        server = 'parki.database.windows.net'
-        database = 'par'
+        server = 'parkin.database.windows.net'
+        database = 'Parkinson'
         username = 'paradmin'
         password = 'Padmin13'
         try:
