@@ -11,9 +11,14 @@ import fernetAES
 import user
 from cryptography.fernet import InvalidToken
 
-
-
-connection = connector.connection()  # Creates DB Connection Module
+try:
+    connection = connector.connection()  # Creates DB Connection Module
+except Exception as e:
+    print(e)
+    print("Failed to create Server Connection")
+    messagebox.showerror("Failed To connect",
+                         "Failed to Create Server Connection \nThe program will terminate")
+    exit(1)
 current_user = user.User()  # Creates Global User Obj for later use
 
 LARGE_FONT = ("Verdana", 12)
@@ -28,6 +33,8 @@ normalMode = 3
 # graph mode
 file = 0
 server = 1
+# Buffer overflow limit
+overFlow_limit = 80
 
 
 class TremorSecApp(tk.Tk):
@@ -524,19 +531,26 @@ class Test2(tk.Frame):
 
 
 class LimEntry(tk.Entry):
+    """
+    Limit Entry input at Entry boxes - To prevent Buffer Overflow
+    Var input_Limit => Upper limit input
+    """
     def __init__(self, *args, **kwargs):
         tk.Entry.__init__(self, *args, **kwargs)
-
-        vcmd = (self.register(self.on_validate),"%P")
+        vcmd = (self.register(self.on_validate), "%P")
         self.configure(validate="key", validatecommand=vcmd)
+        self.input_Limit = overFlow_limit  # The variable to determine the upper limit at input Box
 
     def disallow(self):
         self.bell()
+        messagebox.showerror("Buffer OverFlow",
+                             "Buffer Over-Flow Change input")
 
     def on_validate(self, new_value):
         try:
-            if new_value.strip() == "": return True
-            if len(new_value) > 80:
+            if new_value.strip() == "":
+                return True
+            if len(new_value) > self.input_Limit:
                 self.disallow()
                 return False
         except ValueError:
@@ -544,6 +558,7 @@ class LimEntry(tk.Entry):
             return False
 
         return True
+
 
 KL = KeyLogger()
 app = TremorSecApp()
