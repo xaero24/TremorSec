@@ -11,7 +11,14 @@ import fernetAES
 import user
 from cryptography.fernet import InvalidToken
 
-connection = connector.connection()  # Creates DB Connection Module
+try:
+    connection = connector.connection()  # Creates DB Connection Module
+except Exception as e:
+    print(e)
+    print("Failed to create Server Connection")
+    messagebox.showerror("Failed To connect",
+                         "Failed to Create Server Connection \nThe program will terminate")
+    exit(1)
 current_user = user.User()  # Creates Global User Obj for later use
 
 LARGE_FONT = ("Verdana", 12)
@@ -26,6 +33,8 @@ normalMode = 3
 # graph mode
 file = 0
 server = 1
+# Buffer overflow limit
+overFlow_limit = 80
 
 
 class TremorSecApp(tk.Tk):
@@ -124,9 +133,9 @@ class UserLogin(tk.Frame):
         self.label_username = tk.Label(frame, text="Username")
         self.label_password = tk.Label(frame, text="Password")
 
-        self.entry_username = tk.Entry(frame)
+        self.entry_username = LimEntry(frame)
         # self.entry_username.insert(0, "tzvi")  # TODO: REMOVE
-        self.entry_password = tk.Entry(frame, show="*")
+        self.entry_password = LimEntry(frame, show="*")
         # self.entry_password.insert(0, "1234")  # TODO: REMOVE
 
         self.label_username.grid(row=1)
@@ -203,9 +212,9 @@ class SignUp(tk.Frame):
         self.label_password = tk.Label(frame, text="Password")
         self.label_email = tk.Label(frame, text="Email")
 
-        self.entry_username = tk.Entry(frame)
-        self.entry_password = tk.Entry(frame, show="*")
-        self.entry_email = tk.Entry(frame)
+        self.entry_username = LimEntry(frame)
+        self.entry_password = LimEntry(frame, show="*")
+        self.entry_email = LimEntry(frame)
 
         self.label_username.grid(row=1)
         self.label_password.grid(row=2)
@@ -253,7 +262,7 @@ class Verification_PopUp(tk.Frame):
         top = self.top = tk.Toplevel(parent)
         self.l = tk.Label(top, text="Enter Verification Code")
         self.l.pack()
-        self.e = tk.Entry(top)
+        self.e = LimEntry(top)
         self.e.pack()
         self.b = tk.Button(top, text='Ok', command=self.cleanup)
         self.b.pack()
@@ -519,6 +528,36 @@ class Test2(tk.Frame):
         done_test2 = True
         self.canvas.itemconfig(self.indicator, fill="#ef0404")
         self.update()
+
+
+class LimEntry(tk.Entry):
+    """
+    Limit Entry input at Entry boxes - To prevent Buffer Overflow
+    Var input_Limit => Upper limit input
+    """
+    def __init__(self, *args, **kwargs):
+        tk.Entry.__init__(self, *args, **kwargs)
+        vcmd = (self.register(self.on_validate), "%P")
+        self.configure(validate="key", validatecommand=vcmd)
+        self.input_Limit = overFlow_limit  # The variable to determine the upper limit at input Box
+
+    def disallow(self):
+        self.bell()
+        messagebox.showerror("Buffer OverFlow",
+                             "Buffer Over-Flow Change input")
+
+    def on_validate(self, new_value):
+        try:
+            if new_value.strip() == "":
+                return True
+            if len(new_value) > self.input_Limit:
+                self.disallow()
+                return False
+        except ValueError:
+            self.disallow()
+            return False
+
+        return True
 
 
 KL = KeyLogger()
