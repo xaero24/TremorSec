@@ -18,6 +18,7 @@ class PlotCreate:
         self.user = None
 
     def createPlot(self, current_User):
+        global currentValues
         self.user = current_User  # Sets User Class obj
         vals = getMaxMinTests(self)
         self.max = vals[0][3]
@@ -25,7 +26,7 @@ class PlotCreate:
         if self.mode is file:
             currentValues = getValues(self)
         elif self.mode is server:
-            currentValues = getServerValues_User(self.user.user_server_id)
+            currentValues = getServerValues_User(self.user.user_server_id, self.user)
         if currentValues is not None:
             currentValues.insert(0, vals[2][3])
         else:
@@ -92,7 +93,10 @@ def getServerValues():
     return vals
 
 
-def getServerValues_User(userId):
+def getServerValues_User(userId, userObj):
     serverConnection = conct.connection()
     vals = serverConnection.read_UserId(userId)
+    # Decrypt Values and convert back to float format for the plot
+    for x in range(len(vals)):
+        vals[x] = float(userObj.fernet_class.fernet_decrypt(vals[x].encode()))
     return vals

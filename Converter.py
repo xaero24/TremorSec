@@ -80,7 +80,8 @@ def recordAvgSpeed(avgSpeed, stamp, encryptAES):
     encryptAES.encrypt_file(path)
 
 
-def recordAvgSpeedServer(userId, avgSpeed, stamp):
+def recordAvgSpeedServer(userId, avgSpeed, stamp, fernet):
+    avgSpeed = fernet.fernet_encrypt(str(avgSpeed)).decode()
     c.tryCommit(userId, stamp, avgSpeed)
 
 
