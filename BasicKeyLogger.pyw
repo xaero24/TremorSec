@@ -91,7 +91,7 @@ class KeyLogger:
                 # os.remove(self.res_dir + filename + ".txt")
                 if avgSpeed != (-99):
                     converter.recordAvgSpeed(avgSpeed, filename, self.fernet_Class)
-                    converter.recordAvgSpeedServer(self.current_user_id, avgSpeed, filename)
+                    converter.recordAvgSpeedServer(self.current_user_id, avgSpeed, filename, self.fernet_Class)
                 os.remove(self.res_dir + filename + ".txt")
                 os.remove(self.res_dir + "ResultsCsv/" + filename + ".txt.csv")
                 return False

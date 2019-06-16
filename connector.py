@@ -30,6 +30,11 @@ class connection(object):
         self.cursor.execute(query)
         self.cnxn.commit()
 
+    def writeNL_ENC(self, usrId, dat, val):
+        query = """INSERT INTO dbPark (userId, date, avgSpeed) VALUES ({0},'{1}','{2}')""".format(usrId, dat, val)
+        self.cursor.execute(query)
+        self.cnxn.commit()
+
     def readUsers(self):
         values = dict()
         query = """SELECT * FROM dbUser"""

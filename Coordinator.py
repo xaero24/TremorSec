@@ -23,9 +23,9 @@ class Coordinator:
             print("Connection Succeed \n")
             if bool(self.log):
                 for key in self.log:
-                    self.con.writeNL(key, self.log[key])
+                    self.con.writeNL_ENC(key, self.log[key])
                 self.log = {}
-            self.con.writeNL(userId, date, value)
+            self.con.writeNL_ENC(userId, date, value)
             print("Sent Data to Serer !! [V]")
         except Exception as e:
             print(e)

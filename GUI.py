@@ -66,11 +66,16 @@ class TremorSecApp(tk.Tk):
         if self.frames[cont].winfo_name() == '!optionswindow' and 'done_test2' in globals() and done_test2 is True:
             frame = self.frames[cont]
             frame.Test2Button.config(state=tk.DISABLED)
+        # Disable View Stats Button when no data is given
+        if self.frames[cont].winfo_name() == '!optionswindow' and 'done_tests' not in globals():
+            frame = self.frames[cont]
+            frame.StatsButton.config(state=tk.DISABLED)
         # If the user finished both tests => checks the length of the reasultsFile.csv
-        if self.frames[cont].winfo_name() == '!optionswindow' and 'done_tests' in globals() and done_tests is True:
+        if (self.frames[cont].winfo_name() == '!optionswindow' and 'done_tests' in globals() and done_tests is True) or (self.frames[cont].winfo_name() == '!optionswindow' and 'done_test1' in globals() and done_test1 is True and 'done_test2' in globals() and done_test2 is True):
             frame = self.frames[cont]
             frame.Test1Button.config(state=tk.DISABLED)
             frame.Test2Button.config(state=tk.DISABLED)
+            frame.StatsButton.config(state=tk.ACTIVE)
         if cont == UserLogin:
             self.geometry('{}x{}'.format(300, 300))
         frame = self.frames[cont]
@@ -82,10 +87,6 @@ class AgreementPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = controller
         self.parent.geometry('{}x{}'.format(HEIGHT, WIDTH))
-
-        # # Creates the Window Size
-        # canvas = tk.Canvas(self, height=HEIGHT, width=WIDTH)
-        # canvas.pack()
 
         # Inside frame
         frame = tk.Frame(self)
@@ -134,9 +135,7 @@ class UserLogin(tk.Frame):
         self.label_password = tk.Label(frame, text="Password")
 
         self.entry_username = LimEntry(frame)
-        # self.entry_username.insert(0, "tzvi")  # TODO: REMOVE
         self.entry_password = LimEntry(frame, show="*")
-        # self.entry_password.insert(0, "1234")  # TODO: REMOVE
 
         self.label_username.grid(row=1)
         self.label_password.grid(row=2)
@@ -223,14 +222,14 @@ class SignUp(tk.Frame):
         self.entry_password.grid(row=2, column=1)
         self.entry_email.grid(row=3, column=1)
 
-        self.logbtn = tk.Button(frame, text="Sign Up", command=lambda: self._login_btn_clicked())
+        self.logbtn = tk.Button(frame, text="Sign Up", command=lambda: self._login_btn_clicked(controller))
         self.logbtn.grid(columnspan=2)
 
         self.backButton = tk.Button(frame, text="Back", command=lambda: controller.show_frame(UserLogin))
         self.backButton.grid(columnspan=2)
         frame.place(relx=0.17, rely=0.3)
 
-    def _login_btn_clicked(self):
+    def _login_btn_clicked(self, controller):
         username = self.entry_username.get()
         password = self.entry_password.get()
         email = self.entry_email.get()
@@ -238,7 +237,6 @@ class SignUp(tk.Frame):
         if username == '' or password == '' or email == '':
             messagebox.showerror("Sing Up", "ERROR All Fields Required")
         elif username not in userDb:  # checks if userName already exists
-            # TODO: check for user inputs and breakpoints
             usr = user.User()
             usr.user_name = username
             usr.email = email
@@ -247,6 +245,7 @@ class SignUp(tk.Frame):
             if self.pop.ok_bit is True:
                 if connection.signUp_User(username, password, email):
                     messagebox.showinfo("Sing Up", "Added New User: " + username)
+                    controller.show_frame(UserLogin)
                 else:
                     messagebox.showerror("Sing Up", "ERROR Adding new user")
             else:
