@@ -66,6 +66,7 @@ class TremorSecApp(tk.Tk):
         if self.frames[cont].winfo_name() == '!optionswindow' and 'done_test2' in globals() and done_test2 is True:
             frame = self.frames[cont]
             frame.Test2Button.config(state=tk.DISABLED)
+        # Disable View Stats Button when no data is given
         if self.frames[cont].winfo_name() == '!optionswindow' and 'done_tests' not in globals():
             frame = self.frames[cont]
             frame.StatsButton.config(state=tk.DISABLED)
@@ -86,10 +87,6 @@ class AgreementPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.parent = controller
         self.parent.geometry('{}x{}'.format(HEIGHT, WIDTH))
-
-        # # Creates the Window Size
-        # canvas = tk.Canvas(self, height=HEIGHT, width=WIDTH)
-        # canvas.pack()
 
         # Inside frame
         frame = tk.Frame(self)
@@ -240,7 +237,6 @@ class SignUp(tk.Frame):
         if username == '' or password == '' or email == '':
             messagebox.showerror("Sing Up", "ERROR All Fields Required")
         elif username not in userDb:  # checks if userName already exists
-            # TODO: check for user inputs and breakpoints
             usr = user.User()
             usr.user_name = username
             usr.email = email

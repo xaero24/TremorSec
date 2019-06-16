@@ -2,6 +2,11 @@ from cryptography.fernet import Fernet
 import os
 from cryptography.fernet import InvalidToken
 
+"""
+Uses implementation of AES encryption using 128-bit key.
+For authentication uses SHA-256
+"""
+
 
 class fernet_Encryption:
     def __init__(self, key):
